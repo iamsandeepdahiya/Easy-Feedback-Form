@@ -1,0 +1,130 @@
+.feedback-form-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 1.5rem;
+    background: var(--wp--preset--color--background, #ffffff);
+    border: 1px solid var(--wp--preset--color--contrast, #ddd);
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+.feedback-form-container * {
+    box-sizing: border-box;
+}
+
+.feedback-form-container form {
+    width: 100%;
+    max-width: 100%;
+}
+
+.feedback-form-container .form-group {
+    margin-bottom: 1.5rem;
+    width: 100%;
+}
+
+.feedback-form-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--wp--preset--color--contrast, inherit);
+    width: 100%;
+}
+
+.feedback-form-container input[type="text"],
+.feedback-form-container input[type="email"],
+.feedback-form-container textarea {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--wp--preset--color--contrast, #ddd);
+    border-radius: 4px;
+    background: var(--wp--preset--color--background, #ffffff);
+    color: var(--wp--preset--color--contrast, inherit);
+    font-family: inherit;
+    font-size: inherit;
+    transition: border-color 0.2s ease;
+}
+
+.feedback-form-container input[type="text"]:focus,
+.feedback-form-container input[type="email"]:focus,
+.feedback-form-container textarea:focus {
+    outline: none;
+    border-color: var(--wp--preset--color--primary, #0073aa);
+    box-shadow: 0 0 0 1px var(--wp--preset--color--primary, #0073aa);
+}
+
+.feedback-form-container textarea {
+    height: 150px;
+    resize: vertical;
+    min-height: 100px;
+    max-height: 300px;
+}
+
+.feedback-form-container .button {
+    display: inline-block;
+    margin-top: 1rem;
+    background: var(--wp--preset--color--primary, #0073aa);
+    color: #ffffff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    width: auto;
+}
+
+.feedback-form-container .button:hover {
+    background: var(--wp--preset--color--primary-dark, #005177);
+}
+
+.feedback-form-container .button:focus {
+    outline: none;
+    box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px var(--wp--preset--color--primary, #0073aa);
+}
+
+.feedback-success-message {
+    position: relative;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 1.5rem 2rem 1.5rem 1.5rem;
+    background-color: #ecf8f0;
+    border: 1px solid #28a745;
+    border-radius: 4px;
+    text-align: center;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.feedback-success-message p {
+    color: #155724;
+    font-size: 1.1em;
+    margin: 0;
+}
+
+.feedback-success-message .close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #155724;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    text-align: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.feedback-success-message .close-button:hover {
+    background-color: rgba(40, 167, 69, 0.1);
+    transform: scale(1.1);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+} 

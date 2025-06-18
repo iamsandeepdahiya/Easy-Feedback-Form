@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A simple feedback form plugin for WordPress.
+A simple feedback & survey form plugin for WordPress.
 
 == Description ==
 Easy Feedback form plugin is a powerful, easy-to-use WordPress plugin designed for collecting feedback, survey data from users and analyze it. It is a free and open source software which you can add to any page or post of your website simply by adding just a shortcode. It provides the submitted form-data right into your admin area without requiring any setup. 

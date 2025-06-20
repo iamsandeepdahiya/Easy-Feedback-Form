@@ -1,9 +1,9 @@
 === Easy Feedback Form – Simple, clean feedback & survey form ===
 Contributors: sandeepdahiya
 Tags: Feedback, form
-Requires at least: 6.6 or higher
-Tested up to: 6.8
-Requires PHP: 7.4 or higher
+Requires at least: 5.2.0
+Tested up to: 6.8.1
+Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html

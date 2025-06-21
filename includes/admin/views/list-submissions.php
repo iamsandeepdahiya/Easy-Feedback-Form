@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) {
 
 // Check admin capabilities
 if (!current_user_can('manage_options')) {
-    wp_die(__('You do not have sufficient permissions to access this page.'));
+    wp_die(__('You do not have sufficient permissions to access this page.', 'easy-feedback-form'));
 }
 
 global $wpdb;
@@ -30,7 +30,7 @@ $submissions = $wpdb->get_results($wpdb->prepare(
 
 // Show delete confirmation message with proper escaping
 if (isset($_GET['deleted']) && $_GET['deleted'] == 1) {
-    $message = __('Feedback entry deleted successfully.');
+    $message = __('Feedback entry deleted successfully.', 'easy-feedback-form');
     echo wp_kses_post(sprintf(
         '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
         esc_html($message)
@@ -39,7 +39,7 @@ if (isset($_GET['deleted']) && $_GET['deleted'] == 1) {
 
 // Show error message if present
 if (isset($_GET['error']) && $_GET['error'] == 1) {
-    $message = __('An error occurred while processing your request.');
+    $message = __('An error occurred while processing your request.', 'easy-feedback-form');
     echo wp_kses_post(sprintf(
         '<div class="notice notice-error is-dismissible"><p>%s</p></div>',
         esc_html($message)
@@ -51,19 +51,19 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
     
     <?php if (empty($submissions)): ?>
         <div class="notice notice-info">
-            <p><?php _e('No feedback submissions found.'); ?></p>
+            <p><?php _e('No feedback submissions found.', 'easy-feedback-form'); ?></p>
         </div>
     <?php else: ?>
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
-                    <th scope="col" class="manage-column column-id"><?php _e('ID'); ?></th>
-                    <th scope="col" class="manage-column column-status"><?php _e('Status'); ?></th>
-                    <th scope="col" class="manage-column column-name"><?php _e('Name'); ?></th>
-                    <th scope="col" class="manage-column column-email"><?php _e('Email'); ?></th>
-                    <th scope="col" class="manage-column column-message"><?php _e('Message'); ?></th>
-                    <th scope="col" class="manage-column column-date"><?php _e('Date'); ?></th>
-                    <th scope="col" class="manage-column column-actions"><?php _e('Actions'); ?></th>
+                    <th scope="col" class="manage-column column-id"><?php _e('ID', 'easy-feedback-form'); ?></th>
+                    <th scope="col" class="manage-column column-status"><?php _e('Status', 'easy-feedback-form'); ?></th>
+                    <th scope="col" class="manage-column column-name"><?php _e('Name', 'easy-feedback-form'); ?></th>
+                    <th scope="col" class="manage-column column-email"><?php _e('Email', 'easy-feedback-form'); ?></th>
+                    <th scope="col" class="manage-column column-message"><?php _e('Message', 'easy-feedback-form'); ?></th>
+                    <th scope="col" class="manage-column column-date"><?php _e('Date', 'easy-feedback-form'); ?></th>
+                    <th scope="col" class="manage-column column-actions"><?php _e('Actions', 'easy-feedback-form'); ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -75,9 +75,9 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
                     <td><?php echo esc_html($submission->id); ?></td>
                     <td>
                         <?php if ($read_status == 0): ?>
-                            <span class="feedback-status unread"><?php _e('New'); ?></span>
+                            <span class="feedback-status unread"><?php _e('New', 'easy-feedback-form'); ?></span>
                         <?php else: ?>
-                            <span class="feedback-status read"><?php _e('Read'); ?></span>
+                            <span class="feedback-status read"><?php _e('Read', 'easy-feedback-form'); ?></span>
                         <?php endif; ?>
                     </td>
                     <td><?php echo esc_html($submission->name); ?></td>
@@ -117,12 +117,12 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
                         ?>
                         <a href="<?php echo esc_url($view_url); ?>" 
                            class="button button-small">
-                            <?php _e('View'); ?>
+                            <?php _e('View', 'easy-feedback-form'); ?>
                         </a>
                         <a href="<?php echo esc_url($delete_url); ?>" 
                            class="button button-small button-link-delete"
-                           onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this feedback entry?')); ?>');">
-                            <?php _e('Delete'); ?>
+                           onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this feedback entry?', 'easy-feedback-form')); ?>');">
+                            <?php _e('Delete', 'easy-feedback-form'); ?>
                         </a>
                     </td>
                 </tr>
@@ -137,8 +137,8 @@ if (isset($_GET['error']) && $_GET['error'] == 1) {
         echo paginate_links(array(
             'base' => add_query_arg('paged', '%#%'),
             'format' => '',
-            'prev_text' => __('&laquo;'),
-            'next_text' => __('&raquo;'),
+            'prev_text' => __('&laquo;', 'easy-feedback-form'),
+            'next_text' => __('&raquo;', 'easy-feedback-form'),
             'total' => $total_pages,
             'current' => $current_page
         ));

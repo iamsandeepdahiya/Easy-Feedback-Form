@@ -6,12 +6,12 @@ if (!defined('ABSPATH')) {
 
 // Check admin capabilities
 if (!current_user_can('manage_options')) {
-    wp_die(__('You do not have permission to view feedback entries', 'easy-feedback-form'));
+    wp_die(esc_html__('You do not have permission to view feedback entries', 'easy-feedback-form'));
 }
 
 // Verify nonce for viewing feedback
 if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'view_feedback_' . $_GET['feedback_id'])) {
-    wp_die(__('Security check failed', 'easy-feedback-form'));
+    wp_die(esc_html__('Security check failed', 'easy-feedback-form'));
 }
 
 global $wpdb;
@@ -19,7 +19,7 @@ $table_name = $wpdb->prefix . 'feedback_submissions';
 $feedback_id = isset($_GET['feedback_id']) ? intval($_GET['feedback_id']) : 0;
 
 if (!$feedback_id) {
-    wp_die(__('Invalid feedback ID', 'easy-feedback-form'));
+    wp_die(esc_html__('Invalid feedback ID', 'easy-feedback-form'));
 }
 
 // Get submission with proper escaping
@@ -29,7 +29,7 @@ $submission = $wpdb->get_row($wpdb->prepare(
 ));
 
 if (!$submission) {
-    wp_die(__('Feedback submission not found', 'easy-feedback-form'));
+    wp_die(esc_html__('Feedback submission not found', 'easy-feedback-form'));
 }
 
 // Mark this submission as read with proper escaping
@@ -53,8 +53,8 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
 ?>
 <div class="wrap">
     <h1>
-        <?php _e('View Feedback', 'easy-feedback-form'); ?>
-        <a href="<?php echo esc_url($list_url); ?>" class="page-title-action"><?php _e('Back to List', 'easy-feedback-form'); ?></a>
+        <?php esc_html_e('View Feedback', 'easy-feedback-form'); ?>
+        <a href="<?php echo esc_url($list_url); ?>" class="page-title-action"><?php esc_html_e('Back to List', 'easy-feedback-form'); ?></a>
     </h1>
 
     <div class="feedback-detail-container">
@@ -65,33 +65,33 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
                         <?php 
                         printf(
                             // Translators: %s is the submission date.
-                            __('Submitted on: %s', 'easy-feedback-form'),
-                            date_i18n(
-                                get_option('date_format') . ' \a\t ' . get_option('time_format'),
-                                strtotime($submission->created_at)
-                            )
-                        ); 
+                            esc_html__( 'Submitted on: %s', 'easy-feedback-form' ),
+                            esc_html( date_i18n(
+                            get_option( 'date_format' ) . ' \a\t ' . get_option( 'time_format' ),
+                            strtotime( $submission->created_at )
+                           ) )
+                        );
                         ?>
                     </span>
                     <?php 
                     $read_status = property_exists($submission, 'read_status') ? $submission->read_status : 1;
                     if ($read_status == 0): 
                     ?>
-                        <span class="feedback-status unread"><?php _e('New', 'easy-feedback-form'); ?></span>
+                        <span class="feedback-status unread"><?php esc_html_e('New', 'easy-feedback-form'); ?></span>
                     <?php else: ?>
-                        <span class="feedback-status read"><?php _e('Read', 'easy-feedback-form'); ?></span>
+                        <span class="feedback-status read"><?php esc_html_e('Read', 'easy-feedback-form'); ?></span>
                     <?php endif; ?>
                 </div>
             </div>
 
             <div class="feedback-detail-content">
                 <div class="feedback-field">
-                    <label><?php _e('Name:', 'easy-feedback-form'); ?></label>
+                    <label><?php esc_html_e('Name:', 'easy-feedback-form'); ?></label>
                     <div class="field-value"><?php echo esc_html($submission->name); ?></div>
                 </div>
 
                 <div class="feedback-field">
-                    <label><?php _e('Email:', 'easy-feedback-form'); ?></label>
+                    <label><?php esc_html_e('Email:', 'easy-feedback-form'); ?></label>
                     <div class="field-value">
                         <a href="<?php echo esc_url('mailto:' . antispambot($submission->email)); ?>">
                             <?php echo esc_html(antispambot($submission->email)); ?>
@@ -100,7 +100,7 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
                 </div>
 
                 <div class="feedback-field">
-                    <label><?php _e('Message:', 'easy-feedback-form'); ?></label>
+                    <label><?php esc_html_e('Message:', 'easy-feedback-form'); ?></label>
                     <div class="field-value message">
                         <?php echo wp_kses_post(nl2br(esc_html($submission->message))); ?>
                     </div>
@@ -124,7 +124,7 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
                 <a href="<?php echo esc_url($delete_url); ?>" 
                    class="button button-link-delete"
                    onclick="return confirm('<?php echo esc_js(__('Are you sure you want to delete this feedback entry?', 'easy-feedback-form')); ?>');">
-                    <?php _e('Delete Submission', 'easy-feedback-form'); ?>
+                    <?php esc_html_e('Delete Submission', 'easy-feedback-form'); ?>
                 </a>
             </div>
         </div>

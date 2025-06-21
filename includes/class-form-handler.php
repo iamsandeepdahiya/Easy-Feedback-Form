@@ -84,7 +84,8 @@ class EFF_Form_Handler {
         // Validate fields
         $errors = self::validate_fields($name, $email, $message);
         if (!empty($errors)) {
-            wp_die(implode('<br>', $errors), 'Validation Error', array('response' => 400));
+            $escaped_errors = array_map('esc_html', $errors);
+            wp_die(wp_kses_post(implode('<br>', $escaped_errors)), esc_html__('Validation Error', 'easy-feedback-form'), array('response' => 400));
         }
 
         // Insert feedback

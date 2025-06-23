@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class EFF_Form_Handler {
+class EEFORM_Form_Handler {
     /**
      * Initialize the form handler
      */
@@ -18,7 +18,7 @@ class EFF_Form_Handler {
      */
     private static function check_rate_limit() {
         $ip_address = $_SERVER['REMOTE_ADDR'];
-        $transient_key = 'eff_feedback_limit_' . md5($ip_address);
+        $transient_key = 'eeform_feedback_limit_' . md5($ip_address);
         $submission_count = get_transient($transient_key);
 
         if ($submission_count === false) {
@@ -89,12 +89,12 @@ class EFF_Form_Handler {
         }
 
         // Insert feedback
-        $result = EFF_Database::insert_feedback($name, $email, $message);
+        $result = EEFORM_Database::insert_feedback($name, $email, $message);
 
         if ($result) {
             // Use wp_hash to store success message
-            $token = wp_hash(uniqid('eff_feedback', true));
-            set_transient('eff_feedback_success_' . $token, true, 30);
+            $token = wp_hash(uniqid('eeform_feedback', true));
+            set_transient('eeform_feedback_success_' . $token, true, 30);
             
             // Redirect with secure token
             $redirect_url = add_query_arg('feedback_token', $token, strtok($_SERVER["REQUEST_URI"], '?'));
@@ -110,10 +110,10 @@ class EFF_Form_Handler {
      */
     public static function enqueue_styles() {
         wp_enqueue_style(
-            'eff-frontend-styles',
-            EFF_PLUGIN_URL . 'assets/css/frontend.css',
+            'eeform-frontend-styles',
+            EEFORM_PLUGIN_URL . 'assets/css/frontend.css',
             array(),
-            EFF_VERSION
+            EEFORM_VERSION
         );
     }
 
@@ -126,9 +126,9 @@ class EFF_Form_Handler {
         // Check for success message using secure token
         if (isset($_GET['feedback_token'])) {
             $token = sanitize_key($_GET['feedback_token']);
-            $success = get_transient('eff_feedback_success_' . $token);
+            $success = get_transient('eeform_feedback_success_' . $token);
             if ($success) {
-                delete_transient('eff_feedback_success_' . $token);
+                delete_transient('eeform_feedback_success_' . $token);
                 ?>
                 <div class="feedback-success-message" id="feedback-success">
                     <span class="close-button" onclick="this.parentElement.style.display='none';">&times;</span>
@@ -139,7 +139,7 @@ class EFF_Form_Handler {
         }
 
         // Add CSRF protection
-        wp_nonce_field('eff_feedback_form', 'eff_feedback_nonce');
+        wp_nonce_field('eeform_feedback_form', 'eeform_feedback_nonce');
         ?>
         <div class="feedback-form-container">
             <form id="feedback-form" method="post" action="">

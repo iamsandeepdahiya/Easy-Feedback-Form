@@ -2,7 +2,7 @@
 /*
 Plugin Name: Easy Feedback Form – Simple, clean feedback & survey form
 Plugin URI: https://github.com/iamsandeepdahiya/Easy-Feedback-Form
-Description: A simple, clean feedback & survey form feedback form plugin for WordPress
+Description: A simple, clean feedback & survey form plugin for WordPress
 Version: 1.0.0
 Author: Sandeep Dahiya
 Author URI: https://profiles.wordpress.org/sandeepdahiya/

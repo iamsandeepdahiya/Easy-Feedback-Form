@@ -1,0 +1,85 @@
+/* Admin table styles */
+.wp-list-table {
+    table-layout: fixed;
+    width: 100%;
+}
+.wp-list-table th,
+.wp-list-table td {
+    padding: 8px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Feedback detail styles */
+.feedback-detail-container {
+    max-width: 800px;
+    margin: 20px 0;
+}
+.feedback-detail-card {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+    padding: 20px;
+    border-radius: 4px;
+}
+.feedback-detail-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+.feedback-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+.feedback-date {
+    color: #666;
+}
+.feedback-field {
+    margin-bottom: 20px;
+}
+.feedback-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #23282d;
+}
+.feedback-field .field-value {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+.feedback-field .field-value.message {
+    white-space: pre-line;
+    min-height: 100px;
+}
+.feedback-detail-footer {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+.page-title-action {
+    margin-left: 10px;
+}
+.button-link-delete {
+    color: #dc3232;
+}
+.button-link-delete:hover {
+    color: #dc3232;
+    text-decoration: underline;
+}
+.feedback-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.feedback-status.unread {
+    background-color: #007cba;
+    color: white;
+}
+.feedback-status.read {
+    background-color: #e5e5e5;
+    color: #666;
+} 

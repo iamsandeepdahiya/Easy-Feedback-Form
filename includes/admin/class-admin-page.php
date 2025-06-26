@@ -21,12 +21,27 @@ class EEFORM_Admin_Page {
         global $wpdb;
         $table_name = $wpdb->prefix . 'feedback_submissions';
         
-        // Check if read_status column exists
-        $row = $wpdb->get_results("SHOW COLUMNS FROM {$table_name} LIKE 'read_status'");
-        if (!empty($row)) {
-            $unread_count = $wpdb->get_var("SELECT COUNT(*) FROM $table_name WHERE read_status = 0");
-        } else {
-            $unread_count = 0;
+        $cache_key_unread_count = 'eeform_unread_submissions_count'; 
+        $cache_key_total_count = 'eeform_total_submissions_count';   
+        $cache_group_list = 'feedback_submissions_list'; 
+
+        // Attempt to get unread count from cache first
+        $unread_count = wp_cache_get($cache_key_unread_count, $cache_group_list);
+
+        if (false === $unread_count) {
+            // Check if read_status column exists
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Necessary direct query for schema inspection. Table name and LIKE pattern are sanitized via prepare. Not suitable for caching as it's a schema check.
+            $row = $wpdb->get_results($wpdb->prepare("SHOW COLUMNS FROM %i LIKE %s", $table_name, 'read_status'));
+            if (!empty($row)) {
+                // Get unread count from database
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Direct query to get count. Result is explicitly cached below.
+                $unread_count = $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM %i WHERE read_status = 0", $table_name));
+            } else {
+                $unread_count = 0;
+            }
+            
+            // Set cache for unread count for 5 minutes (300 seconds)
+            wp_cache_set($cache_key_unread_count, $unread_count, $cache_group_list, 300);
         }
         
         $menu_title = 'Easy Feedback';
@@ -35,10 +50,10 @@ class EEFORM_Admin_Page {
         }
         
         add_menu_page(
-            'Feedback Received',
+            esc_html__('Feedback Received', 'easy-feedback-form'),
             $menu_title,
             'manage_options',
-            'feedback-submissions',
+            'easy-feedback-form',
             array(__CLASS__, 'render_page'),
             'dashicons-feedback',
             30
@@ -49,32 +64,48 @@ class EEFORM_Admin_Page {
      * Handle admin page actions
      */
     public static function handle_actions() {
-        if (isset($_GET['action']) && $_GET['action'] === 'delete_feedback' && isset($_GET['feedback_id']) && isset($_GET['_wpnonce'])) {
-            if (!wp_verify_nonce($_GET['_wpnonce'], 'delete_feedback_' . $_GET['feedback_id'])) {
-                wp_die('Security check failed');
-            }
+    // Check if the delete feedback action is requested
+    if (isset($_GET['action']) && $_GET['action'] === 'delete_feedback') {
 
-            if (!current_user_can('manage_options')) {
-                wp_die('You do not have permission to delete feedback entries');
-            }
+        // Validate and sanitize nonce
+        $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+        // Validate and sanitize feedback_id
+        $feedback_id = isset($_GET['feedback_id']) ? intval(wp_unslash($_GET['feedback_id'])) : 0;
 
-            $feedback_id = intval($_GET['feedback_id']);
-            $result = EEFORM_Database::delete_feedback($feedback_id);
-
-            if ($result) {
-                wp_redirect(admin_url('admin.php?page=feedback-submissions&deleted=1'));
-            } else {
-                wp_redirect(admin_url('admin.php?page=feedback-submissions&error=1'));
-            }
-            exit;
+        // Verify nonce
+        if (!wp_verify_nonce($nonce, 'delete_feedback_' . $feedback_id)) {
+            wp_die(esc_html__('Security check failed', 'easy-feedback-form'));
         }
-    }
 
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_die(esc_html__('You do not have permission to delete feedback entries', 'easy-feedback-form'));
+        }
+
+        // Delete feedback from the database
+        $result = EEFORM_Database::delete_feedback($feedback_id);
+
+        // Redirect based on deletion result
+        if ($result) {
+            // Invalidate the unread count cache
+            wp_cache_delete('eeform_unread_submissions_count', 'feedback_submissions_list');
+            wp_cache_delete('eeform_total_submissions_count', 'feedback_submissions_list');
+            wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions');
+
+            wp_redirect(admin_url('admin.php?page=easy-feedback-form&deleted=1'));
+        } else {
+            wp_redirect(admin_url('admin.php?page=easy-feedback-form&error=1'));
+        }
+        exit;
+    }
+    }
     /**
      * Enqueue admin styles
+     *
+     * @param string $hook The current admin page hook.
      */
     public static function enqueue_styles($hook) {
-        if ('toplevel_page_feedback-submissions' !== $hook) {
+        if ('toplevel_page_easy-feedback-form' !== $hook) {
             return;
         }
 
@@ -90,24 +121,36 @@ class EEFORM_Admin_Page {
      * Render the admin page
      */
     public static function render_page() {
-        if (isset($_GET['action']) && $_GET['action'] === 'view_feedback' && isset($_GET['feedback_id'])) {
+    // Check if the 'view_feedback' action is requested
+    if (isset($_GET['action']) && $_GET['action'] === 'view_feedback' && isset($_GET['feedback_id'])) {
+        // Sanitize and unslash feedback_id
+        $feedback_id = intval(wp_unslash($_GET['feedback_id']));
+        // Sanitize and unslash nonce
+        $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+
+        // Verify nonce before rendering single view
+        if (wp_verify_nonce($nonce, 'view_feedback_' . $feedback_id)) {
             self::render_single_view();
         } else {
-            self::render_list_view();
+            // Nonce verification failed, display an error or redirect
+            wp_die(esc_html__('Security check failed for viewing feedback.', 'easy-feedback-form'));
         }
+    } else {
+        self::render_list_view();
+    }
     }
 
     /**
      * Render single submission view
      */
     private static function render_single_view() {
-        require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/single-submission.php';
+    require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/single-submission.php';
     }
 
     /**
      * Render submissions list view
      */
     private static function render_list_view() {
-        require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/list-submissions.php';
+    require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/list-submissions.php';
     }
-} 
+}

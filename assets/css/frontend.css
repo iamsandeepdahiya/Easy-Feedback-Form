@@ -1,4 +1,4 @@
-.feedback-form-container {
+.eeform-container {
     max-width: 600px;
     margin: 20px auto;
     padding: 1.5rem;
@@ -9,21 +9,21 @@
     box-sizing: border-box;
 }
 
-.feedback-form-container * {
+.eeform-container * {
     box-sizing: border-box;
 }
 
-.feedback-form-container form {
+.eeform-container form {
     width: 100%;
     max-width: 100%;
 }
 
-.feedback-form-container .form-group {
+.eeform-container .form-group {
     margin-bottom: 1.5rem;
     width: 100%;
 }
 
-.feedback-form-container label {
+.eeform-container label {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 500;
@@ -31,9 +31,9 @@
     width: 100%;
 }
 
-.feedback-form-container input[type="text"],
-.feedback-form-container input[type="email"],
-.feedback-form-container textarea {
+.eeform-container input[type="text"],
+.eeform-container input[type="email"],
+.eeform-container textarea {
     display: block;
     width: 100%;
     max-width: 100%;
@@ -47,22 +47,22 @@
     transition: border-color 0.2s ease;
 }
 
-.feedback-form-container input[type="text"]:focus,
-.feedback-form-container input[type="email"]:focus,
-.feedback-form-container textarea:focus {
+.eeform-container input[type="text"]:focus,
+.eeform-container input[type="email"]:focus,
+.eeform-container textarea:focus {
     outline: none;
     border-color: var(--wp--preset--color--primary, #0073aa);
     box-shadow: 0 0 0 1px var(--wp--preset--color--primary, #0073aa);
 }
 
-.feedback-form-container textarea {
+.eeform-container textarea {
     height: 150px;
     resize: vertical;
     min-height: 100px;
     max-height: 300px;
 }
 
-.feedback-form-container .button {
+.eeform-container .button {
     display: inline-block;
     margin-top: 1rem;
     background: var(--wp--preset--color--primary, #0073aa);
@@ -76,11 +76,11 @@
     width: auto;
 }
 
-.feedback-form-container .button:hover {
+.eeform-container .button:hover {
     background: var(--wp--preset--color--primary-dark, #005177);
 }
 
-.feedback-form-container .button:focus {
+.eeform-container .button:focus {
     outline: none;
     box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px var(--wp--preset--color--primary, #0073aa);
 }
@@ -128,3 +128,11 @@
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 } 
+
+
+.eeform-hint {
+    font-size: 0.70em;
+    color: #666;
+    margin-top: 5px;
+    margin-bottom: 10px; /* Provide some space before next form group */
+}

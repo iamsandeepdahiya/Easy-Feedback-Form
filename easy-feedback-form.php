@@ -1,12 +1,14 @@
 <?php
 /*
-Plugin Name: Easy Feedback Form – Simple, clean feedback & survey form
+Plugin Name: Easy Feedback Form – simple, clean feedback & survey form
 Plugin URI: https://github.com/iamsandeepdahiya/Easy-Feedback-Form
 Description: A simple, clean feedback & survey form plugin for WordPress
 Version: 1.0.0
 Author: Sandeep Dahiya
 Author URI: https://profiles.wordpress.org/sandeepdahiya/
 License: GPL v2 or later
+Text Domain: easy-feedback-form
+Domain Path: /languages
 */
 
 // Exit if accessed directly
@@ -17,7 +19,7 @@ if (!defined('ABSPATH')) {
 // Define plugin constants
 define('EEFORM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('EEFORM_PLUGIN_URL', plugin_dir_url(__FILE__));
-define('EEFORM_VERSION', '1.1');
+define('EEFORM_VERSION', '1.0.0');
 
 // Autoload classes
 spl_autoload_register(function ($class) {
@@ -47,7 +49,6 @@ spl_autoload_register(function ($class) {
     }
 });
 
-// Initialize the plugin
 class EEFORM_Feedback_Form {
     /**
      * Initialize the plugin

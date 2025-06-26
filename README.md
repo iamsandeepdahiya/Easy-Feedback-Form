@@ -76,7 +76,7 @@ Easy-feedback-form/
 
 ### Version Control
 
-The plugin includes database version control to handle updates smoothly. Current version: 1.1
+The plugin includes database version control to handle updates smoothly. Current version: 1.0.0
 
 ## Security
 

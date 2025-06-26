@@ -6,49 +6,95 @@ if (!defined('ABSPATH')) {
 
 // Check admin capabilities
 if (!current_user_can('manage_options')) {
-    wp_die(esc_html__('You do not have permission to view feedback entries', 'easy-feedback-form'));
+    wp_die(
+        esc_html__('You do not have permission to view feedback entries', 'easy-feedback-form'),
+        esc_html__('Permission Denied', 'easy-feedback-form'),
+        array('response' => 403)
+    );
 }
 
+
+// Sanitize and unslash feedback_id from GET before nonce verification
+$feedback_id_from_get = isset($_GET['feedback_id']) ? intval(wp_unslash($_GET['feedback_id'])) : 0;
+$nonce_from_get = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+
 // Verify nonce for viewing feedback
-if (!isset($_GET['_wpnonce']) || !wp_verify_nonce($_GET['_wpnonce'], 'view_feedback_' . $_GET['feedback_id'])) {
-    wp_die(esc_html__('Security check failed', 'easy-feedback-form'));
+if (!wp_verify_nonce($nonce_from_get, 'view_feedback_' . $feedback_id_from_get)) {
+    wp_die(
+        esc_html__('Security check failed', 'easy-feedback-form'),
+        esc_html__('Security Error', 'easy-feedback-form'),
+        array('response' => 403)
+    );
 }
+
 
 global $wpdb;
 $table_name = $wpdb->prefix . 'feedback_submissions';
-$feedback_id = isset($_GET['feedback_id']) ? intval($_GET['feedback_id']) : 0;
+// Feedback ID is already sanitized and unslashed from the nonce check above.
+$feedback_id = $feedback_id_from_get;
 
 if (!$feedback_id) {
-    wp_die(esc_html__('Invalid feedback ID', 'easy-feedback-form'));
+    wp_die(
+        esc_html__('Invalid feedback ID', 'easy-feedback-form'),
+        esc_html__('Invalid Request', 'easy-feedback-form'),
+        array('response' => 400) 
+    );
 }
 
-// Get submission with proper escaping
-$submission = $wpdb->get_row($wpdb->prepare(
-    "SELECT * FROM $table_name WHERE id = %d",
-    $feedback_id
-));
+// Define a unique cache key for this specific submission
+$cache_key = 'eeform_submission_' . $feedback_id;
+$cache_group = 'feedback_submissions';
+
+// Try to get submission from cache first
+$submission = wp_cache_get($cache_key, $cache_group);
+
+// If not found in cache, fetch from the database
+if (false === $submission) {
+    // Get submission with proper escaping
+    //// phpcs:ignore  WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- This is a necessary direct query to a custom table, and caching is implemented.
+    $submission = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM %i WHERE id = %d", // Using %i for table name
+        $table_name, // Pass table name as a parameter
+        $feedback_id
+    ));
+
+    // Store the result in cache, for 1 hour (3600 seconds)
+    // You can adjust the expiration time as needed
+    if (!empty($submission)) {
+        wp_cache_set($cache_key, $submission, $cache_group, 3600);
+    }
+}
 
 if (!$submission) {
-    wp_die(esc_html__('Feedback submission not found', 'easy-feedback-form'));
+    wp_die(
+        esc_html__('Feedback submission not found', 'easy-feedback-form'),
+        esc_html__('Not Found', 'easy-feedback-form'),
+        array('response' => 404)
+    );
 }
 
 // Mark this submission as read with proper escaping
 if (property_exists($submission, 'read_status') && $submission->read_status == 0) {
+    // phpcs:ignore  WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Direct update to a custom table is necessary, and its cache is invalidated immediately after.
     $wpdb->update(
         $table_name,
         array('read_status' => 1),
         array('id' => $feedback_id),
-        array('%d'),
-        array('%d')
+        array('%d'), // Format for the updated column (read_status is integer)
+        array('%d')  // Format for the WHERE clause column (id is integer)
     );
     // Update the object to reflect the change
     $submission->read_status = 1;
+
+    // Invalidate the cache for this specific submission after update
+    wp_cache_delete($cache_key, $cache_group);
+    wp_cache_flush_group('feedback_submissions_list'); 
 }
 
 // Get the referring page URL
 $list_url = wp_get_referer();
-if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
-    $list_url = admin_url('admin.php?page=feedback-submissions');
+if (!$list_url || strpos($list_url, 'page=easy-feedback-form') === false) {
+    $list_url = admin_url('admin.php?page=easy-feedback-form');
 }
 ?>
 <div class="wrap">
@@ -69,7 +115,7 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
                             esc_html( date_i18n(
                             get_option( 'date_format' ) . ' \a\t ' . get_option( 'time_format' ),
                             strtotime( $submission->created_at )
-                           ) )
+                            ) )
                         );
                         ?>
                     </span>
@@ -112,7 +158,7 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
                 $delete_url = wp_nonce_url(
                     add_query_arg(
                         array(
-                            'page' => 'feedback-submissions',
+                            'page' => 'easy-feedback-form',
                             'action' => 'delete_feedback',
                             'feedback_id' => $submission->id
                         ),
@@ -129,4 +175,4 @@ if (!$list_url || strpos($list_url, 'page=feedback-submissions') === false) {
             </div>
         </div>
     </div>
-</div> 
+</div>

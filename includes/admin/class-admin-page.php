@@ -22,7 +22,7 @@ class EEFORM_Admin_Page {
         $table_name = $wpdb->prefix . 'feedback_submissions';
         
         $cache_key_unread_count = 'eeform_unread_submissions_count'; 
-        $cache_key_total_count = 'eeform_total_submissions_count';   
+        $cache_key_total_count = 'eeform_total_submissions_count';  
         $cache_group_list = 'feedback_submissions_list'; 
 
         // Attempt to get unread count from cache first
@@ -64,41 +64,54 @@ class EEFORM_Admin_Page {
      * Handle admin page actions
      */
     public static function handle_actions() {
-    // Check if the delete feedback action is requested
-    if (isset($_GET['action']) && $_GET['action'] === 'delete_feedback') {
+        // Check if the delete feedback action is requested
+        if (isset($_GET['action']) && $_GET['action'] === 'delete_feedback') {
 
-        // Validate and sanitize nonce
-        $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
-        // Validate and sanitize feedback_id
-        $feedback_id = isset($_GET['feedback_id']) ? intval(wp_unslash($_GET['feedback_id'])) : 0;
+            // Sanitize and unslash nonce
+            $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+            // Retrieve feedback_id as a raw string for nonce action construction first.
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized --The raw feedback id is sanitized after nonce verification below.
+            $raw_feedback_id = isset($_GET['feedback_id']) ? wp_unslash($_GET['feedback_id']) : '';
 
-        // Verify nonce
-        if (!wp_verify_nonce($nonce, 'delete_feedback_' . $feedback_id)) {
-            wp_die(esc_html__('Security check failed', 'easy-feedback-form'));
+            // Verify nonce
+            if (!wp_verify_nonce($nonce, 'delete_feedback_' . $raw_feedback_id)) {
+                wp_die(
+                    esc_html__('Security check failed', 'easy-feedback-form'),
+                    esc_html__('Security Error', 'easy-feedback-form'),
+                    array('response' => 403)
+                );
+            }
+
+            // Now that the nonce is verified, it's safe to fully sanitize the feedback_id.
+            $feedback_id = intval($raw_feedback_id);
+
+            // Check user capabilities
+            if (!current_user_can('manage_options')) {
+                wp_die(
+                    esc_html__('You do not have permission to delete feedback entries', 'easy-feedback-form'),
+                    esc_html__('Permission Denied', 'easy-feedback-form'),
+                    array('response' => 403)
+                );
+            }
+
+            // Delete feedback from the database
+            $result = EEFORM_Database::delete_feedback($feedback_id);
+
+            // Redirect based on deletion result
+            if ($result) {
+                // Invalidate the unread count cache
+                wp_cache_delete('eeform_unread_submissions_count', 'feedback_submissions_list');
+                wp_cache_delete('eeform_total_submissions_count', 'feedback_submissions_list');
+                wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions');
+
+                wp_redirect(admin_url('admin.php?page=easy-feedback-form&deleted=1'));
+            } else {
+                wp_redirect(admin_url('admin.php?page=easy-feedback-form&error=1'));
+            }
+            exit;
         }
-
-        // Check user capabilities
-        if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You do not have permission to delete feedback entries', 'easy-feedback-form'));
-        }
-
-        // Delete feedback from the database
-        $result = EEFORM_Database::delete_feedback($feedback_id);
-
-        // Redirect based on deletion result
-        if ($result) {
-            // Invalidate the unread count cache
-            wp_cache_delete('eeform_unread_submissions_count', 'feedback_submissions_list');
-            wp_cache_delete('eeform_total_submissions_count', 'feedback_submissions_list');
-            wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions');
-
-            wp_redirect(admin_url('admin.php?page=easy-feedback-form&deleted=1'));
-        } else {
-            wp_redirect(admin_url('admin.php?page=easy-feedback-form&error=1'));
-        }
-        exit;
     }
-    }
+
     /**
      * Enqueue admin styles
      *
@@ -121,36 +134,48 @@ class EEFORM_Admin_Page {
      * Render the admin page
      */
     public static function render_page() {
-    // Check if the 'view_feedback' action is requested
-    if (isset($_GET['action']) && $_GET['action'] === 'view_feedback' && isset($_GET['feedback_id'])) {
-        // Sanitize and unslash feedback_id
-        $feedback_id = intval(wp_unslash($_GET['feedback_id']));
-        // Sanitize and unslash nonce
-        $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+        // Check if the 'view_feedback' action is requested
+        if (isset($_GET['action']) && $_GET['action'] === 'view_feedback' && isset($_GET['feedback_id'])) {
+            // Sanitize and unslash nonce
+            $nonce = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+            // Retrieve feedback_id as a raw string for nonce action construction first.
+            // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized --The raw feedback id is sanitized after nonce verification below.
+            $raw_feedback_id = wp_unslash($_GET['feedback_id']); 
 
-        // Verify nonce before rendering single view
-        if (wp_verify_nonce($nonce, 'view_feedback_' . $feedback_id)) {
-            self::render_single_view();
+            // Verify nonce before rendering single view
+            if (wp_verify_nonce($nonce, 'view_feedback_' . $raw_feedback_id)) {
+                // Now that the nonce is verified, it's safe to fully sanitize the feedback_id.
+                $feedback_id = intval($raw_feedback_id);
+                self::render_single_view();
+            } else {
+                // Nonce verification failed, display an error or redirect
+                wp_die(
+                    esc_html__('Security check failed for viewing feedback.', 'easy-feedback-form'),
+                    esc_html__('Security Error', 'easy-feedback-form'),
+                    array('response' => 403)
+                );
+            }
         } else {
-            // Nonce verification failed, display an error or redirect
-            wp_die(esc_html__('Security check failed for viewing feedback.', 'easy-feedback-form'));
+            self::render_list_view();
         }
-    } else {
-        self::render_list_view();
-    }
     }
 
     /**
      * Render single submission view
      */
     private static function render_single_view() {
-    require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/single-submission.php';
+        // Ensure $feedback_id is available in the included file's scope if needed there.
+        // This file will often assume $feedback_id is set globally or passed.
+        // For clarity, if 'single-submission.php' needs $feedback_id,
+        // it should either be passed as a global (less ideal) or passed to a function within it.
+        // For now, assuming it relies on global scope or is handled internally.
+        require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/single-submission.php';
     }
 
     /**
      * Render submissions list view
      */
     private static function render_list_view() {
-    require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/list-submissions.php';
+        require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/list-submissions.php';
     }
 }

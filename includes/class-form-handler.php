@@ -96,7 +96,7 @@ class EEFORM_Form_Handler {
             wp_die(esc_html__('Security check failed', 'easy-feedback-form'), esc_html__('Security Error', 'easy-feedback-form'), array('response' => 403));
         }
 
-        // Check rate limit for submissions.
+        // Check rate limit
         if (!self::check_rate_limit()) {
             wp_die(esc_html__('Submission limit exceeded. Please try again later.', 'easy-feedback-form'), esc_html__('Rate Limit Error', 'easy-feedback-form'), array('response' => 429));
         }
@@ -135,11 +135,17 @@ class EEFORM_Form_Handler {
             $error_token = wp_hash(uniqid('eeform_error', true));
             set_transient('eeform_form_errors_' . $error_token, $error_data, MINUTE_IN_SECONDS); // Valid for 1 minute
 
-            // Redirect back to the current page with the error token
+            // Generate nonce for error display
+            $error_nonce = wp_create_nonce('eeform_display_error');
+
+            // Redirect back to the current page with the error token and nonce
             // phpcs:ignore  WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- $_SERVER['REQUEST_URI'] is used to get the base path for redirect.
             $raw_request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '';
             $current_url_base = strtok(sanitize_url($raw_request_uri), '?');
-            $redirect_url = add_query_arg('eeform_error_token', $error_token, $current_url_base);
+            $redirect_url = add_query_arg(array(
+                'eeform_error_token' => $error_token,
+                '_wpnonce_error' => $error_nonce,
+            ), $current_url_base);
             wp_safe_redirect($redirect_url);
             exit;
         }
@@ -152,11 +158,17 @@ class EEFORM_Form_Handler {
             $token = wp_hash(uniqid('eeform_feedback', true));
             set_transient('eeform_feedback_success_' . $token, true, 30); // Valid for 30 seconds
 
+            // Generate nonce for success display
+            $feedback_nonce = wp_create_nonce('eeform_display_feedback');
+
             // Prepare base URI: check existence, unslash, and sanitize immediately.
             // phpcs:ignore  WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- $_SERVER['REQUEST_URI'] is used to get the base path for redirect.
             $base_uri = isset($_SERVER['REQUEST_URI']) ? sanitize_url(wp_unslash($_SERVER['REQUEST_URI'])) : '';
             
-            $redirect_url = add_query_arg('feedback_token', $token, strtok($base_uri, '?'));
+            $redirect_url = add_query_arg(array(
+                'feedback_token' => $token,
+                '_wpnonce_feedback' => $feedback_nonce, // New nonce for feedback display
+            ), strtok($base_uri, '?'));
             wp_safe_redirect($redirect_url);
             exit;
         } else {
@@ -195,35 +207,45 @@ class EEFORM_Form_Handler {
             'message' => '',
         );
 
-        // Check for success message using secure token
-        // This is not form data processing but retrieving a server-generated token for a one-time success message display.
-        // The actual form submission where this token originated was nonce-verified.
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a server-generated token for a redirect, not user-submitted form data requiring a new nonce check.
+        // Nonce check for feedback_token
         if (isset($_GET['feedback_token'])) {
-            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a server-generated token for a redirect, not user-submitted form data requiring a new nonce check.
-            $token = sanitize_text_field(wp_unslash($_GET['feedback_token']));
-            $success = get_transient('eeform_feedback_success_' . $token);
-            if ($success) {
-                delete_transient('eeform_feedback_success_' . $token);
-                ?>
-                <div class="feedback-success-message" id="feedback-success">
-                    <span class="close-button" onclick="this.parentElement.style.display='none';">&times;</span>
-                    <p><?php esc_html_e('Thank you for your feedback! We appreciate your time and will review your submission.', 'easy-feedback-form'); ?></p>
-                </div>
-                <?php
+            // Validate the nonce specific to feedback display
+            $feedback_nonce = isset($_GET['_wpnonce_feedback']) ? sanitize_key(wp_unslash($_GET['_wpnonce_feedback'])) : '';
+            if (empty($feedback_nonce) || !wp_verify_nonce($feedback_nonce, 'eeform_display_feedback')) {
+                // Invalid nonce, treat as if token was not set or remove the token
+                // For security, it's better to just not display the message if nonce is invalid
+                unset($_GET['feedback_token']);
+            } else {
+                $token = sanitize_text_field(wp_unslash($_GET['feedback_token']));
+                $success = get_transient('eeform_feedback_success_' . $token);
+                if ($success) {
+                    delete_transient('eeform_feedback_success_' . $token);
+                    ?>
+                    <div class="feedback-success-message" id="feedback-success">
+                        <span class="close-button" onclick="this.parentElement.style.display='none';">&times;</span>
+                        <p><?php esc_html_e('Thank you for your feedback! We appreciate your time and will review your submission.', 'easy-feedback-form'); ?></p>
+                    </div>
+                    <?php
+                }
             }
         }
 
-        // Check for validation errors from a previous submission via transient
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a server-generated token for a redirect, not user-submitted form data requiring a new nonce check.
+        // Nonce check for eeform_error_token
         if (isset($_GET['eeform_error_token'])) {
-            // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- This is a server-generated token for a redirect, not user-submitted form data requiring a new nonce check.
-            $error_token = sanitize_key(wp_unslash($_GET['eeform_error_token']));
-            $error_data = get_transient('eeform_form_errors_' . $error_token);
-            if ($error_data && is_array($error_data)) {
-                $form_errors = isset($error_data['errors']) ? $error_data['errors'] : array();
-                $old_form_input = isset($error_data['old_input']) ? $error_data['old_input'] : $old_form_input;
-                delete_transient('eeform_form_errors_' . $error_token);
+            // Validate the nonce specific to error display
+            $error_display_nonce = isset($_GET['_wpnonce_error']) ? sanitize_key(wp_unslash($_GET['_wpnonce_error'])) : '';
+            if (empty($error_display_nonce) || !wp_verify_nonce($error_display_nonce, 'eeform_display_error')) {
+                // Invalid nonce, treat as if token was not set or remove the token
+                // For security, it's better to just not display errors if nonce is invalid
+                unset($_GET['eeform_error_token']);
+            } else {
+                $error_token = sanitize_key(wp_unslash($_GET['eeform_error_token']));
+                $error_data = get_transient('eeform_form_errors_' . $error_token);
+                if ($error_data && is_array($error_data)) {
+                    $form_errors = isset($error_data['errors']) ? $error_data['errors'] : array();
+                    $old_form_input = isset($error_data['old_input']) ? $error_data['old_input'] : $old_form_input;
+                    delete_transient('eeform_form_errors_' . $error_token);
+                }
             }
         }
         

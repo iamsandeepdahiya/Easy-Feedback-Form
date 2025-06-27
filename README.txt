@@ -1,7 +1,7 @@
 === Easy Feedback Form – simple, clean feedback & survey form ===
 Contributors: sandeepdahiya
 Tags: Feedback, form
-Requires at least: 5.2.0
+Requires at least: 6.3
 Tested up to: 6.8
 Requires PHP: 7.4
 Stable tag: 1.0.0

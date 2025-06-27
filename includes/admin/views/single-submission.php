@@ -13,26 +13,35 @@ if (!current_user_can('manage_options')) {
     );
 }
 
+// Initialize feedback_id with a safe default
+$feedback_id = 0;
 
 // Sanitize and unslash feedback_id from GET before nonce verification
-$feedback_id_from_get = isset($_GET['feedback_id']) ? intval(wp_unslash($_GET['feedback_id'])) : 0;
-$nonce_from_get = isset($_GET['_wpnonce']) ? sanitize_text_field(wp_unslash($_GET['_wpnonce'])) : '';
+if (isset($_GET['feedback_id'], $_GET['_wpnonce'])) {
+    // Sanitize and unslash the nonce immediately.
+    $nonce = sanitize_text_field(wp_unslash($_GET['_wpnonce']));
+    // Retrieve feedback_id as a raw string for nonce action construction first.
+    // We'll intval it *after* nonce verification.
+    // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized --The raw feedback id is sanitized after nonce verification below.
+    $raw_feedback_id = wp_unslash($_GET['feedback_id']); 
 
-// Verify nonce for viewing feedback
-if (!wp_verify_nonce($nonce_from_get, 'view_feedback_' . $feedback_id_from_get)) {
-    wp_die(
-        esc_html__('Security check failed', 'easy-feedback-form'),
-        esc_html__('Security Error', 'easy-feedback-form'),
-        array('response' => 403)
-    );
+    if (!wp_verify_nonce($nonce, 'view_feedback_' . $raw_feedback_id)) {
+        wp_die(
+            esc_html__('Security check failed', 'easy-feedback-form'),
+            esc_html__('Security Error', 'easy-feedback-form'),
+            array('response' => 403)
+        );
+    }
+
+    // Now that the nonce is verified, it's safe to fully sanitize the feedback_id.
+    $feedback_id = intval($raw_feedback_id);
 }
 
 
 global $wpdb;
 $table_name = $wpdb->prefix . 'feedback_submissions';
-// Feedback ID is already sanitized and unslashed from the nonce check above.
-$feedback_id = $feedback_id_from_get;
 
+// Feedback ID is already sanitized and unslashed from the nonce check above.
 if (!$feedback_id) {
     wp_die(
         esc_html__('Invalid feedback ID', 'easy-feedback-form'),
@@ -51,7 +60,7 @@ $submission = wp_cache_get($cache_key, $cache_group);
 // If not found in cache, fetch from the database
 if (false === $submission) {
     // Get submission with proper escaping
-    //// phpcs:ignore  WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- This is a necessary direct query to a custom table, and caching is implemented.
+    // phpcs:ignore  WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- This is a necessary direct query to a custom table, and caching is implemented.
     $submission = $wpdb->get_row($wpdb->prepare(
         "SELECT * FROM %i WHERE id = %d", // Using %i for table name
         $table_name, // Pass table name as a parameter

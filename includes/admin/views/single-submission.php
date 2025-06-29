@@ -52,7 +52,7 @@ if (!$feedback_id) {
 
 // Define a unique cache key for this specific submission
 $cache_key = 'eeform_submission_' . $feedback_id;
-$cache_group = 'feedback_submissions';
+$cache_group = 'feedback_submissions_list';
 
 // Try to get submission from cache first
 $submission = wp_cache_get($cache_key, $cache_group);

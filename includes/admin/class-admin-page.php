@@ -164,11 +164,6 @@ class EEFORM_Admin_Page {
      * Render single submission view
      */
     private static function render_single_view() {
-        // Ensure $feedback_id is available in the included file's scope if needed there.
-        // This file will often assume $feedback_id is set globally or passed.
-        // For clarity, if 'single-submission.php' needs $feedback_id,
-        // it should either be passed as a global (less ideal) or passed to a function within it.
-        // For now, assuming it relies on global scope or is handled internally.
         require_once EEFORM_PLUGIN_DIR . 'includes/admin/views/single-submission.php';
     }
 

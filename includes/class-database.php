@@ -88,6 +88,7 @@ class EEFORM_Database {
         $sanitized_message = sanitize_textarea_field($message);
 
         // When inserting, we don't fetch/cache. We will need to invalidate related caches.
+        // wpdb->insert() is secure way for simply passing the data array and the format array, wpdb->prepare not required here
         // phpcs:ignore  WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Necessary direct query for schema inspection. Table name and LIKE pattern are sanitized via prepare. No caching applicable.
         $result = $wpdb->insert(
             $table_name,
@@ -102,7 +103,6 @@ class EEFORM_Database {
 
         // Invalidate relevant caches after a successful insert.
         if (false !== $result) {
-            wp_cache_delete('eeform_total_submissions_count', 'feedback_submissions_list');
             wp_cache_flush_group('feedback_submissions_list');
         }
 

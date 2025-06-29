@@ -180,7 +180,7 @@ class EEFORM_Database {
             $wpdb->query('COMMIT');
 
             // Invalidate the cache for the specific item being deleted.
-            wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions');
+            wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions_list');
             // Flushes all entries in this group.
             wp_cache_flush_group('feedback_submissions_list'); 
 

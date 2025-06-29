@@ -102,7 +102,7 @@ class EEFORM_Admin_Page {
                 // Invalidate the unread count cache
                 wp_cache_delete('eeform_unread_submissions_count', 'feedback_submissions_list');
                 wp_cache_delete('eeform_total_submissions_count', 'feedback_submissions_list');
-                wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions');
+                wp_cache_delete('eeform_submission_' . $feedback_id, 'feedback_submissions_list');
 
                 wp_redirect(admin_url('admin.php?page=easy-feedback-form&deleted=1'));
             } else {
